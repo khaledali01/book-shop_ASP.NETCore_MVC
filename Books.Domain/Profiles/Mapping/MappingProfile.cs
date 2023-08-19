@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
 using Books.Domain.Entities;
-using Books.Dtos;
-using Books.Models;
+using Books.Domain.Profiles.Dtos;
 
-namespace Books.Profiles
+namespace Books.Domain.Profiles.Mapping
 {
     public class MappingProfile : Profile
     {

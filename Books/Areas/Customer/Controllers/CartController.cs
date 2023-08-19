@@ -1,8 +1,7 @@
 ﻿using Books.Domain.Entities;
 using Books.Domain.ViewModels;
 using Books.Interfaces;
-using Books.Models;
-using Books.Utilities;
+using Books.Domain.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -265,7 +264,7 @@ namespace Books.Areas.Customer.Controllers
                 return RedirectToAction("OrderConfirmed", "Cart", new { id = ShoppingCartViewModel.OrderHeader.Id });
 
             //stripe settings 
-            var domain = _configuration["StripeSettings:url"];
+            var domain = _configuration["StripeSettings:Url"];
             var options = new SessionCreateOptions
             {
                 PaymentMethodTypes = new List<string>

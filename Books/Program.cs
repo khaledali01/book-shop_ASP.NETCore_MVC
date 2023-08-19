@@ -1,15 +1,15 @@
 using Books.Data.Persistence;
 using Books.Data.UnitOfWork;
 using Books.Interfaces;
-using Books.Utilities;
+using Books.Domain.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Stripe;
-using Books.Models;
-using Books.Domain.ViewModels;
+using Books.Domain.Utilities;
+using Books.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +53,8 @@ builder.Services.AddAuthentication()
 builder.Services.AddScoped<ApplicationUser>();
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
 builder.Services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
+// Batabase initializer
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -120,6 +122,9 @@ app.UseRouting();
 // Stripe global pipeline
 StripeConfiguration.ApiKey = builder.Configuration.GetSection("StripeSettings:SecretKey").Get<string>();
 
+//Invoke function to seed database
+SeedDatabase();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -134,3 +139,11 @@ app.UseEndpoints(endpoints =>
 });
 
 app.Run();
+
+// Seed Database
+void SeedDatabase()
+{
+    using var scope = app.Services.CreateAsyncScope();
+    var initializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+    initializer.Initialize();
+}

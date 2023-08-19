@@ -2,10 +2,9 @@
 using Books.Domain.ViewModels;
 using AutoMapper;
 using Books.Interfaces;
-using Books.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Books.Utilities;
+using Books.Domain.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Stripe;
 using Stripe.Checkout;
@@ -23,22 +22,24 @@ namespace Books.Areas.Admin.Controllers
         private readonly IUnitOfWork<ApplicationUser> _applicationUser;
         private readonly IUnitOfWork<Domain.Entities.Product> _product;
         private readonly IMapper _mapper;
-
-
+ 
         [BindProperty]
         public OrderViewModel OrderViewModel { get; set; }
+        private IConfiguration _configuration { get; }
 
         public OrderController(
             IUnitOfWork<OrderHeader> orderHeader,
             IUnitOfWork<OrderDetail> orderDetail,
             IUnitOfWork<ApplicationUser> applicationUser,
             IUnitOfWork<Domain.Entities.Product> product,
+            IConfiguration configuration,
             IMapper mapper)
         {
             _orderHeader = orderHeader;
             _orderDetail = orderDetail;
             _applicationUser = applicationUser;
             _product = product;
+            _configuration = configuration;
             _mapper = mapper;
         }
 
@@ -85,7 +86,7 @@ namespace Books.Areas.Admin.Controllers
             OrderViewModel.OrderDetail = await _orderDetail.Entity.GetAllAsync(filter: o => o.OrderId == OrderViewModel.OrderHeader.Id, p => p.Product, h => h.OrderHeader);
 
             //stripe settings 
-            var domain = "https://localhost:44376/";
+            var domain = _configuration["StripeSettings:Url"];
             var options = new SessionCreateOptions
             {
                 PaymentMethodTypes = new List<string>
@@ -156,7 +157,7 @@ namespace Books.Areas.Admin.Controllers
 
         // POST: Order/Update
         [HttpPost]
-        [Authorize(Roles = "Admin , Employee")]
+        [Authorize(Roles = "SuperAdmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update()
         {
@@ -190,11 +191,12 @@ namespace Books.Areas.Admin.Controllers
 
             return RedirectToAction("Details", "Order", new { id = orderHeaderInDB.Id });
         }
+        
 
 
         // POST: Order/Process
         [HttpPost]
-        [Authorize(Roles = "Admin , Employee")]
+        [Authorize(Roles = "Admin , Employee, SuperAdmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Process()
         {
@@ -216,7 +218,7 @@ namespace Books.Areas.Admin.Controllers
 
         // POST: Order/Process
         [HttpPost]
-        [Authorize(Roles = "Admin , Employee")]
+        [Authorize(Roles = "Admin , Employee, SuperAdmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Ship()
         {
@@ -244,7 +246,7 @@ namespace Books.Areas.Admin.Controllers
 
         // POST: Order/Cancel
         [HttpPost]
-        [Authorize(Roles = "Admin , Employee")]
+        [Authorize(Roles = "Admin , Employee, SuperAdmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel()
         {
