@@ -1,73 +1,86 @@
 ﻿using Books.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Books.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Books.Controllers
 {
     [Area("Admin")]
-    public class CategoryController : Controller
+    public class AuthorController : Controller
     {
-        private readonly IUnitOfWork<Category> _category;
+        private readonly IUnitOfWork<Author> _author;
 
-        public CategoryController(IUnitOfWork<Category> category)
+        public AuthorController(IUnitOfWork<Author> author)
         {
-            _category = category;
+            _author = author;
         }
 
-        // GET: Categories
+        // GET: Author
         public async Task<IActionResult> Index()
         {
-            IEnumerable <Category> categories = _category.Entity.GetAll();
-            return View(await Task.FromResult(categories));
+            IEnumerable <Author> authors = _author.Entity.GetAll(includeProperties: "Products").ToList();
+            return View(await Task.FromResult(authors));
         }
 
-        // GET: Category/Create
+        // GET: Author/Create
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Category/Create  
+        // POST: Author/Create  
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for   
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.  
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,DisplayOrder,CreatedDateTime")] Category category)
+        public async Task<IActionResult> Create([Bind("Id,FullName")] Author author)
         {
             try
             {
-                if (category.Name == category.DisplayOrder.ToString())
-                {
-                    ModelState.AddModelError("OrderError", "The order can not match the Name.");
-                }
-
                 if (ModelState.IsValid)
                 {
-                    var obj = _category.Entity.GetFirstOrDefault(c => c.Name == category.Name);
+                    var obj = _author.Entity.GetFirstOrDefault(c => c.FullName == author.FullName);
                     if (obj == null)
                     {
-                        _category.Entity.Insert(category);
-                        await _category.SaveAsync();
-                        TempData["Success"] = "Category created successfully.";
+                        _author.Entity.Insert(author);
+                        await _author.SaveAsync();
+                        TempData["Success"] = "Author created successfully.";
                         return RedirectToAction("Index");
                     }
                     else
                     {
-                        ModelState.AddModelError("CustomerError", "This category already exists.");
+                        ModelState.AddModelError("AuthorError", "This author already exists.");
                     }
                 }
             }
             catch
             {
-                ModelState.AddModelError("", "An Expected Error!");
+                ModelState.AddModelError("Error", "An Expected Error!");
             }
 
-            return View(category);
+            return View(author);
         }
 
-        // GET: Employee/Edit/5
+ 
+        // GET: Employees/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Author autor = _author.Entity.GetFirstOrDefault(a => a.Id == id, includeProperties: "Products");
+
+            if (autor == null)
+            {
+                return NotFound();
+            }
+            return View(await Task.FromResult(autor));
+        }
+
+        // GET: Author/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || id == 0)
@@ -75,7 +88,7 @@ namespace Books.Controllers
                 return NotFound();
             }
 
-            var category = _category.Entity.GetFirstOrDefault(c => c.Id == id);
+            var category = _author.Entity.GetFirstOrDefault(c => c.Id == id);
             if (category == null)
             {
                 return NotFound();
@@ -84,14 +97,14 @@ namespace Books.Controllers
             return View(await Task.FromResult(category));
         }
 
-        // POST: Employee/Edit/5  
+        // POST: Author/Edit/5  
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for   
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.  
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DisplayOrder,CreatedDateTime")] Category category)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FullName")] Author author)
         {
-            if (id != category.Id)
+            if (id != author.Id)
             {
                 return NotFound();
             }
@@ -100,13 +113,13 @@ namespace Books.Controllers
             {
                 try
                 {
-                    _category.Entity.Update(category);
-                    await _category.SaveAsync();
+                    _author.Entity.Update(author);
+                    await _author.SaveAsync();
                     TempData["Success"] = "Category upaded successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CategoryExists(category.Id))
+                    if (!AuthorExists(author.Id))
                     {
                         return NotFound();
                     }
@@ -117,10 +130,10 @@ namespace Books.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(category);
+            return View(author);
         }
 
-        // GET: Employee/Delete/5  
+        // GET: Author/Delete/5  
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -128,30 +141,30 @@ namespace Books.Controllers
                 return NotFound();
             }
 
-            var category = _category.Entity.GetFirstOrDefault(c => c.Id == id);
-            if (category == null)
+            Author author = _author.Entity.GetFirstOrDefault(c => c.Id == id);
+            if (author == null)
             {
                 return NotFound();
             }
 
-            return View(await Task.FromResult(category));
+            return View(await Task.FromResult(author));
         }
 
-        // POST: Categories/Delete/5
+        // POST: Author/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var category = _category.Entity.GetById(id);
-            _category.Entity.Delete(category.Id);
-            await _category.SaveAsync();
-            TempData["Success"] = "Category deleted successfully.";
+            var author = _author.Entity.GetById(id);
+            _author.Entity.Delete(author.Id);
+            await _author.SaveAsync();
+            TempData["Success"] = "Author deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CategoryExists(int id)
+        private bool AuthorExists(int id)
         {
-            return _category.Entity.Exists(id);
+            return _author.Entity.Exists(id);
         }
     }
 }
