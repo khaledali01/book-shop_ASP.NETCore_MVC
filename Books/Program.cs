@@ -17,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+//DbContext configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
@@ -25,6 +26,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 // Bind stripe settings
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
 
+// Bind EmailSender settings
+builder.Services.Configure<EmailSenderSettings>(builder.Configuration.GetSection("EmailSenderSettings"));
+
 // Authentication and authorization
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/*options => options.SignIn.RequireConfirmedAccount = true*/)
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -32,14 +36,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/*options => options
     .AddDefaultTokenProviders()
     .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>();
 
+//Services configuration
 builder.Services.AddScoped<ApplicationUser>();
-
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
- 
 builder.Services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
-
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
-
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = $"/Identity/Account/Login";
@@ -48,10 +49,20 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 });
 
+// Session cache
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(100);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // Fixing the error "A possible object cycle was detected"
 builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
+// Getting rid of code that mapped one object to another.
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddApiVersioning();
@@ -90,7 +101,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseSession();
 app.UseRouting();
 
 // Stripe global pipeline
