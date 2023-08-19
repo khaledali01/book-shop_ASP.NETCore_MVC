@@ -10,7 +10,6 @@ using System.Text.Json.Serialization;
 using Stripe;
 using Books.Models;
 using Books.Domain.ViewModels;
-using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,13 +27,24 @@ builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Str
 
 // Bind EmailSender settings
 builder.Services.Configure<EmailSenderSettings>(builder.Configuration.GetSection("EmailSenderSettings"));
-
+ 
 // Authentication and authorization
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/*options => options.SignIn.RequireConfirmedAccount = true*/)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager<SignInManager<ApplicationUser>>()
     .AddDefaultTokenProviders()
     .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>();
+builder.Services.AddAuthentication()
+    .AddFacebook(facebookOptions =>
+    {
+        facebookOptions.AppId = builder.Configuration.GetSection("FacebookSettings:AppId").Get<string>();
+        facebookOptions.AppSecret = builder.Configuration.GetSection("FacebookSettings:AppSecret").Get<string>();
+    })
+    .AddGoogle(googleOptions =>
+    {
+        googleOptions.ClientId = builder.Configuration.GetSection("GoogleSettings:ClientId").Get<string>();
+        googleOptions.ClientSecret = builder.Configuration.GetSection("GoogleSettings:ClientSecret").Get<string>();
+    });
 
 //Services configuration
 builder.Services.AddScoped<ApplicationUser>();
