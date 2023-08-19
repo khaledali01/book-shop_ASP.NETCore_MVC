@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Books.Areas.Admin.Controllers.Api
 {
-#pragma warning disable CS8602
-
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
@@ -63,7 +61,6 @@ namespace Books.Areas.Admin.Controllers.Api
             var _mappedProduct = _mapper.Map(productDto, productInDb);
 
             await _product.Entity.UpdateAsync(_mappedProduct);
-            await _product.SaveAsync();
             await _product.CompleteAsync();
 
             return Ok();
@@ -82,16 +79,15 @@ namespace Books.Areas.Admin.Controllers.Api
             if (productInDb.ImageUrl != null)
             {
                 string oldImagePath = Path.Combine(_hostEnvironment.WebRootPath, productInDb.ImageUrl.TrimStart('\\'));
-              
+
                 if (System.IO.File.Exists(oldImagePath))
                     System.IO.File.Delete(oldImagePath);
             }
 
             await _product.Entity.DeleteAsync(productInDb.Id);
-            await _product.SaveAsync();
             await _product.CompleteAsync();
 
-            return Ok(productInDb);      
+            return Ok(productInDb);
         }
     }
 }
