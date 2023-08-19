@@ -1,5 +1,7 @@
 ﻿@model Books.Domain.ViewModels.ShoppingCartViewModel
 @using Microsoft.Extensions.Options
+@using Books.Utilities;
+@inject IOptions<Books.Utilities.StripeSettings> Stripe
 
 
 @{
@@ -98,14 +100,15 @@
                                 {
                                     <li class="list-group-item d-flex justify-content-between">
                                         <div>
-                                            <h6 class="my-0">@item.Product.Title</h6>
+                                            <h6 class="my-0">@item.Product.Title</h6> 
+                                            <small class="text-muted">Price:<strike>@item.PriceHolder.ToString("c")</strike></small><br>
                                             <small class="text-muted">Quantity: @item.Count</small>
                                         </div>
-                                        <span class="text-muted">@((item.PriceHolder * item.Count).ToString("c")) </span>
+                                        <span class="text-muted">@(item.SetPriceHolderRabat(@item.PriceHolder*Rabat.DISCOUNT).ToString("c")) </span>
                                     </li>
                                 }
                                 <li class="list-group-item d-flex justify-content-between bg-light">
-                                    <small class="text-dark">Total (USD)</small>
+                                    <small class="text-dark">Total </small>
                                     <strong class="text-dark">@Model.OrderHeader.OrderTotal.ToString("c")</strong>
                                 </li>
                             </ul>
@@ -116,7 +119,7 @@
             <div class="card-footer">
                 <div class="row">
                     <p class="col-12 col-md-8 pt-2 text-warning">
-                         <span class="text-dark">Estimate Arrival Date:</span> &nbsp;@DateTime.Now.AddDays(3).ToShortDateString()  &nbsp;<i class="bi bi-text-right text-dark"></i><i class="bi bi-truck text-dark" style="font-size: 1.5rem;"></i>
+                         <span class="text-dark">Estimate Arrival Date:</span> &nbsp;@DateTime.Now.AddDays(ArrivalDate.Days).ToShortDateString()  &nbsp;<i class="bi bi-text-right text-dark"></i><i class="bi bi-truck text-dark" style="font-size: 1.5rem;"></i>
                     </p>
                     <div class="col-12 col-md-4">
                         <button type="submit" value="Place Order" class="btn btn-primary form-control">Place Order</button>

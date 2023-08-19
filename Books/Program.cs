@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using Stripe;
+using Books.Models;
+using Books.Domain.ViewModels;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,9 +22,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
     b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
 );
 
+// Bind stripe settings
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("StripeSettings"));
+
 // Authentication and authorization
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(/*options => options.SignIn.RequireConfirmedAccount = true*/).AddDefaultTokenProviders()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(/*options => options.SignIn.RequireConfirmedAccount = true*/)
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager<SignInManager<ApplicationUser>>()
+    .AddDefaultTokenProviders()
+    .AddClaimsPrincipalFactory<CustomUserClaimsPrincipalFactory>();
+
+builder.Services.AddScoped<ApplicationUser>();
 
 builder.Services.AddSingleton<IEmailSender, EmailSender>();
  
@@ -80,6 +92,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Stripe global pipeline
+StripeConfiguration.ApiKey = builder.Configuration.GetSection("StripeSettings:SecretKey").Get<string>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
