@@ -4,13 +4,15 @@ using Microsoft.EntityFrameworkCore;
 namespace Books.Data.Persistence
 {
 #pragma warning disable CS8618
-    public class ApplicationDBContext:DbContext
+    public class ApplicationDbContext:DbContext
     {
-        public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Cover> Cover { get; set; }
+
 
     }
 }

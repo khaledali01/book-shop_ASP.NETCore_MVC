@@ -6,6 +6,7 @@ using Books.Interfaces;
 namespace Books.Controllers
 {
 #pragma warning disable CS8604
+    [Area("Admin")]
     public class CategoryController : Controller
     {
         private readonly IUnitOfWork<Category> _category;
@@ -49,8 +50,7 @@ namespace Books.Controllers
                     if (obj == null)
                     {
                         _category.Entity.Insert(category);
-                        await Task.CompletedTask;
-                        _category.Save();
+                        await _category.SaveAsync();
                         TempData["Success"] = "Category created successfully.";
                         return RedirectToAction("Index");
                     }
@@ -88,8 +88,8 @@ namespace Books.Controllers
         // POST: Employee/Edit/5  
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for   
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.  
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,DisplayOrder,CreatedDateTime")] Category category)
         {
             if (id != category.Id)
@@ -102,8 +102,7 @@ namespace Books.Controllers
                 try
                 {
                     _category.Entity.Update(category);
-                    await Task.CompletedTask;
-                    _category.Save();
+                    await _category.SaveAsync();
                     TempData["Success"] = "Category upaded successfully.";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -145,9 +144,8 @@ namespace Books.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var category = _category.Entity.GetById(id);
-            _category.Entity.Delete(category);
-            await Task.CompletedTask;
-            _category.Save();
+            _category.Entity.Delete(category.Id);
+            await _category.SaveAsync();
             TempData["Success"] = "Category deleted successfully.";
             return RedirectToAction(nameof(Index));
         }
